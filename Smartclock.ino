@@ -1,5 +1,6 @@
 
 #include "SPI.h"
+#include "Time.h"
  
 // Slave Select on pin 13
 int ss = 10;
@@ -18,10 +19,8 @@ void setup() {
     SPI.setClockDivider(SPI_CLOCK_DIV64);
     SPI.setDataMode(SPI_MODE0);
     // reset 7 seg
-    SPI.transfer(0);
-    SPI.transfer(0);
     clear7Seg();
-    clear7Seg();
+    setTime(18, 46, 0, 8, 1, 2013);
 }
 
 void write7Seg(String msg)
@@ -32,6 +31,14 @@ void write7Seg(String msg)
     {
         SPI.transfer(msg[i]);
     }
+    digitalWrite(ss, HIGH);
+}
+
+void colon7Seg()
+{
+    digitalWrite(ss, LOW);
+    SPI.transfer(0x77);
+    SPI.transfer(0b00010000);
     digitalWrite(ss, HIGH);
 }
 
@@ -49,12 +56,17 @@ void clear7Seg()
     digitalWrite(ss, HIGH);
 }
 
-void loop() {
-    //digitalWrite(ss, HIGH);   // turn the LED on (HIGH is the voltage level)
-    //delay(1000);               // wait for a second
-    //digitalWrite(ss, LOW);    // turn the LED off by making the voltage LOW
- 
-    clear7Seg();   
-    write7Seg("1234");
-    delay(1000);               // wait for a second
+String formatDigits(int d)
+{
+    if(d < 10)
+        return "0" + String(d);
+    return String(d);
+}
+
+void loop() 
+{
+    clear7Seg();
+    colon7Seg();   
+    write7Seg(formatDigits(hour()) + formatDigits(minute()));
+    delay(500);               // wait for a second
 }
