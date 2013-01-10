@@ -1,18 +1,26 @@
 
 #include "SPI.h"
 #include "Time.h"
+#include "TimeAlarms.h"
  
 // Slave Select on pin 13
-int ss = 10;
-// 7 Seg Reset pin
-int rst = 9;
+#define SS 		10
+// Temperature Sensor on analog input 0
+#define TEMP_SENSOR	0
+// Light Sensor on analog input 1
+#define LIGHT_SENSOR	1
+
+bool displayTime = true;
+unsigned int temperature = 0, temp_acc = 0, temp_cnt = 0;
 
 void clear7Seg(void);
+void displayCallback(void);
+void printSensors();
 
 void setup() {                
     // initialize the digital pins as outputs.
-    pinMode(ss, OUTPUT);
-    digitalWrite(ss, HIGH);
+    pinMode(SS, OUTPUT);
+    digitalWrite(SS, HIGH);
     // set up SPI bus
     SPI.begin();
     SPI.setBitOrder(MSBFIRST);
@@ -20,40 +28,57 @@ void setup() {
     SPI.setDataMode(SPI_MODE0);
     // reset 7 seg
     clear7Seg();
-    setTime(18, 46, 0, 8, 1, 2013);
+    setTime(17, 43, 0, 9, 1, 2013);
+
+    // Analog setup
+    analogReference(DEFAULT);
+    Serial.begin(9600);
+
+    // Alarm setup
+    displayCallback();
+    Alarm.timerRepeat(20, displayCallback);
+    Alarm.timerRepeat(5, printSensors);
 }
 
 void write7Seg(String msg)
 {
     int i;
-    digitalWrite(ss, LOW);
+    digitalWrite(SS, LOW);
     for(i = 0; i < msg.length(); i++)
     {
         SPI.transfer(msg[i]);
     }
-    digitalWrite(ss, HIGH);
+    digitalWrite(SS, HIGH);
 }
 
 void colon7Seg()
 {
-    digitalWrite(ss, LOW);
+    digitalWrite(SS, LOW);
     SPI.transfer(0x77);
     SPI.transfer(0b00010000);
-    digitalWrite(ss, HIGH);
+    digitalWrite(SS, HIGH);
+}
+
+void degrees7Seg()
+{
+    digitalWrite(SS, LOW);
+    SPI.transfer(0x77);
+    SPI.transfer(0b00100010);
+    digitalWrite(SS, HIGH);
 }
 
 void reset7Seg()
 {
-    digitalWrite(ss, LOW);
+    digitalWrite(SS, LOW);
     SPI.transfer(0x81);
-    digitalWrite(ss, HIGH);
+    digitalWrite(SS, HIGH);
 }
 
 void clear7Seg()
 {
-    digitalWrite(ss, LOW);
+    digitalWrite(SS, LOW);
     SPI.transfer(0x76);
-    digitalWrite(ss, HIGH);
+    digitalWrite(SS, HIGH);
 }
 
 String formatDigits(int d)
@@ -63,10 +88,48 @@ String formatDigits(int d)
     return String(d);
 }
 
-void loop() 
+void displayCallback() 
 {
+    Serial.println("display callback");
     clear7Seg();
-    colon7Seg();   
-    write7Seg(formatDigits(hour()) + formatDigits(minute()));
-    delay(500);               // wait for a second
+    if(displayTime)
+    {
+        colon7Seg();   
+        write7Seg(formatDigits(hour()) + formatDigits(minute()));
+    }
+    else
+    {
+        degrees7Seg();
+        write7Seg(String(temperature) + " ");
+    }
+    displayTime = !displayTime;
+}
+
+void sensorsUpdate()
+{
+    // read sensors
+    float a0 = analogRead(TEMP_SENSOR);
+    float a1 = analogRead(LIGHT_SENSOR);
+    
+    temp_acc += (((a0*3.3)/1023.0) - 0.5)*1000;
+    temp_cnt++;
+    if(temp_cnt >= 199)
+    {
+        temperature = temp_acc/temp_cnt;
+        Serial.println(temp_acc);
+        Serial.println(temp_cnt);
+        temp_acc = 0;
+        temp_cnt = 0;
+    }
+}
+
+void printSensors()
+{
+    Serial.println(temperature);
+}
+
+void loop()
+{
+    sensorsUpdate();
+    Alarm.delay(100);
 }
