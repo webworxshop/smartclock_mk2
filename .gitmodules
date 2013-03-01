@@ -1,3 +1,6 @@
 [submodule "libraries/pubsubclient"]
 	path = libraries/pubsubclient
 	url = https://github.com/knolleary/pubsubclient.git
+[submodule "libraries/Bluetooth"]
+	path = libraries/Bluetooth
+	url = https://github.com/cmonr/Arduino-Bluetooth-Library.git
