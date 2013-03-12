@@ -2,6 +2,8 @@
 #ifndef __SERIAL_7SEGMENT_DISPLAY_H
 #define __SERIAL_7SEGMENT_DISPLAY_H
 
+#include "Arduino.h"
+
 class Serial7SegmentDisplay
 {
     public:
@@ -9,6 +11,7 @@ class Serial7SegmentDisplay
         void write(String msg);
         void writeSpecial(int s);
         void clear(void);
+        void brightness(byte b);
 
         const int DECIMAL0   PROGMEM = 0x01;
         const int DECIMAL1   PROGMEM = 0x02;

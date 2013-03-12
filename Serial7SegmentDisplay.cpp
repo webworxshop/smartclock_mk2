@@ -44,3 +44,11 @@ void Serial7SegmentDisplay::clear(void)
     digitalWrite(SS, HIGH);
 }        
 
+void Serial7SegmentDisplay::brightness(byte b)
+{
+    digitalWrite(SS, LOW);
+    SPI.transfer(0x7A);
+    SPI.transfer(b);
+    digitalWrite(SS, HIGH);
+}
+

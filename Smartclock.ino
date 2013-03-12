@@ -16,8 +16,6 @@
 // Number of sensor readings to average
 #define SENSOR_AVERAGE_READINGS     200
 
-
-
 // local variables for sensors and program state
 bool displayTime = true;
 unsigned int temperature = 0, temp_acc = 0, temp_cnt = 0;
@@ -113,6 +111,7 @@ void printSensors()
 void setup()
 {
     Display.begin(10);
+    Display.brightness(128);
     setTime(17, 20, 0, 9, 1, 2013);
 
     Serial.begin(57600);
