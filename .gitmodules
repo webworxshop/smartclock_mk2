@@ -4,3 +4,6 @@
 [submodule "libraries/Bluetooth"]
 	path = libraries/Bluetooth
 	url = https://github.com/cmonr/Arduino-Bluetooth-Library.git
+[submodule "libraries/jeelib"]
+	path = libraries/jeelib
+	url = https://github.com/jcw/jeelib.git
