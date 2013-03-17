@@ -5,6 +5,9 @@
 #include "SerialClient.h"
 #include "PubSubClient.h"
 #include "Bluetooth.h"
+#include "Ports.h"
+
+ISR(WDT_vect) { Sleepy::watchdogEvent(); }
  
 // Temperature Sensor on analog input 0
 #define TEMP_SENSOR	                0
@@ -123,7 +126,7 @@ void setup()
 {
     Display.begin(10);
     Display.brightness(128);
-    setTime(17, 20, 0, 9, 1, 2013);
+    setTime(14, 26, 0, 17, 3, 2013);
 
     Serial.begin(57600);
     //while(!bluetooth.beginCMD())
@@ -155,5 +158,6 @@ void loop()
     if(last_lightlevel != lightlevel)
         displayUpdate();
 
-    Alarm.delay(100);
+    Sleepy::loseSomeTime(100);
+    Alarm.serviceAlarms();
 }
