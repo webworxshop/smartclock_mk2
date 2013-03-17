@@ -13,6 +13,7 @@ class Serial7SegmentDisplay
         void clear(void);
         void brightness(byte b);
 
+        const int ALLOFF     PROGMEM = 0x00;
         const int DECIMAL0   PROGMEM = 0x01;
         const int DECIMAL1   PROGMEM = 0x02;
         const int DECIMAL2   PROGMEM = 0x04;

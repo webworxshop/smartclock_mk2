@@ -14,16 +14,18 @@
 #define BATTERY_SENSOR              2
 
 // Number of sensor readings to average
-#define SENSOR_AVERAGE_READINGS     200
+#define TEMP_AVERAGE_READINGS       200
+#define LIGHT_AVERAGE_READINGS      10
+#define BATTERY_AVERAGE_READINGS    200
 
 // local variables for sensors and program state
 bool displayTime = true;
 unsigned int temperature = 0, temp_acc = 0, temp_cnt = 0;
 unsigned long battery = 0, batt_acc = 0, batt_cnt = 0;
-unsigned int lightlevel = 0, light_acc = 0, light_cnt = 0;
+unsigned long lightlevel = 0, light_acc = 0, light_cnt = 0;
 
 // configuration stuff pushed from server
-unsigned int light_threshhold = 1000;
+unsigned int light_threshold = 300;
 
 // static configuration stuff
 byte server[] = { 10, 0, 0, 194 }; // not actually needed for serial PTP link
@@ -65,6 +67,13 @@ void displayUpdate()
             Display.write(String(temperature) + " ");
         }
     }
+    else
+        Display.writeSpecial(Display.ALLOFF); 
+}
+
+void displayCallback()
+{
+    displayUpdate();
     displayTime = !displayTime;
 }
 
@@ -77,16 +86,18 @@ void sensorsUpdate()
 
     temp_acc += (((a0*3.3)/1023.0) - 0.5)*1000;
     temp_cnt++;
-    if(temp_cnt >= SENSOR_AVERAGE_READINGS)
+    if(temp_cnt >= TEMP_AVERAGE_READINGS)
     {
         temperature = temp_acc/temp_cnt;
         temp_acc = 0;
         temp_cnt = 0;
     }
 
-    light_acc += ((a1*3.3)/1023.0);
+    //Serial.println(a1);
+    light_acc += a1;
+    //Serial.println(light_acc);
     light_cnt++;
-    if(light_cnt >= SENSOR_AVERAGE_READINGS)
+    if(light_cnt >= LIGHT_AVERAGE_READINGS)
     {
         lightlevel = light_acc/light_cnt;
         light_acc = 0;
@@ -95,7 +106,7 @@ void sensorsUpdate()
 
     batt_acc += ((a2*3.3)/1023.0)*2820;
     batt_cnt++;
-    if(batt_cnt >= SENSOR_AVERAGE_READINGS)
+    if(batt_cnt >= BATTERY_AVERAGE_READINGS)
     {
         battery = batt_acc/batt_cnt;
         batt_acc = 0;
@@ -105,7 +116,7 @@ void sensorsUpdate()
 
 void printSensors()
 {
-    //Serial.println(temperature);
+    Serial.println(lightlevel);
 }
 
 void setup()
@@ -131,12 +142,18 @@ void setup()
 
     // Alarm setup
     displayUpdate();
-    Alarm.timerRepeat(20, displayUpdate);
+    Alarm.timerRepeat(20, displayCallback);
     Alarm.timerRepeat(5, printSensors);
 }
 
 void loop()
 {
+    static unsigned long last_lightlevel;
+
+    last_lightlevel = lightlevel;
     sensorsUpdate();
+    if(last_lightlevel != lightlevel)
+        displayUpdate();
+
     Alarm.delay(100);
 }
