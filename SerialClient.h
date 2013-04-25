@@ -22,6 +22,9 @@ public:
   virtual void stop();
   virtual uint8_t connected();
   virtual operator bool();
+
+protected:
+  bool conn_state = false;
 };
 
 #endif

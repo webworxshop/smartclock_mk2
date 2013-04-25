@@ -1,4 +1,3 @@
-
 #include "Time.h"
 #include "TimeAlarms.h"
 #include "Serial7SegmentDisplay.h"
@@ -29,6 +28,7 @@ unsigned long lightlevel = 0, light_acc = 0, light_cnt = 0;
 
 // configuration stuff pushed from server
 unsigned int light_threshold = 300;
+long tz_offset = 60*60*12; 
 
 // static configuration stuff
 byte server[] = { 10, 0, 0, 194 }; // not actually needed for serial PTP link
@@ -37,14 +37,24 @@ byte server[] = { 10, 0, 0, 194 }; // not actually needed for serial PTP link
 void pubSubCallback(char* topic, byte* payload, unsigned int length);
 
 // hardware driver interface defs
-//SerialClient serClient;
-//PubSubClient client(server, 1883, callback, serClient);
+SerialClient serClient;
+PubSubClient client(server, 1883, pubSubCallback, serClient);
 Serial7SegmentDisplay Display;
 Bluetooth bluetooth;
 
 void pubSubCallback(char* topic, byte* payload, unsigned int length)
 {
-  // handle message arrived
+    char buf[32];
+    uint32_t unixtime;
+    // handle message arrived
+    String t = String(topic);
+    memcpy(buf, payload, length);
+    buf[length] = '\0';
+    if(t == "/meta/timesync")
+    {
+        unixtime = String(buf).toInt();
+        setTime(unixtime);
+    }
 }
 
 String formatDigits(int d)
@@ -119,29 +129,47 @@ void sensorsUpdate()
 
 void printSensors()
 {
-    Serial.println(lightlevel);
+//    Serial.println(lightlevel);
 }
 
 void setup()
 {
+    char deviceName[] = "smartclock";
+    char willTopic[64];
+    sprintf(willTopic, "/devices/%s/status", deviceName); 
+
     Display.begin(10);
     Display.brightness(128);
-    setTime(14, 26, 0, 17, 3, 2013);
+    setTime(19, 19, 0, 16, 4, 2013);
 
     Serial.begin(57600);
-    //while(!bluetooth.beginCMD())
-    //{
-    //    delay(100);
-    //}
+    while(!bluetooth.beginCMD())
+    {
+        delay(100);
+    }
+    Display.write("1111");
+    bluetooth.connect();
+    //while(!bluetooth.isConnected());
+    delay(100);
+    Display.write("2222");
 
     // Analog setup
     analogReference(DEFAULT);
-    
-    //if(client.connect("smartclock"))
-    //{
-    //    client.publish("/devices/" + deviceName + "/status", "online");
-    //    // subscribe to topics
-    //}
+   
+    delay(100); 
+    //serClient.write((uint8_t*)deviceName, strlen(deviceName));
+    if(client.connect(deviceName, willTopic, 0, 1, "offline"))
+    {
+        Display.write("3333");
+        client.publish(willTopic, "online");
+        // subscribe to topics
+        client.subscribe("/meta/timesync");
+    }
+    else
+    {
+        Display.write("4444");
+    }
+    delay(5000);
 
     // Alarm setup
     displayUpdate();
@@ -158,6 +186,7 @@ void loop()
     if(last_lightlevel != lightlevel)
         displayUpdate();
 
-    Sleepy::loseSomeTime(100);
-    Alarm.serviceAlarms();
+    //Sleepy::loseSomeTime(100);
+    Alarm.delay(100);
+    client.loop();
 }
