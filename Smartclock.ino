@@ -50,7 +50,7 @@ void pubSubCallback(char* topic, byte* payload, unsigned int length)
     String t = String(topic);
     memcpy(buf, payload, length);
     buf[length] = '\0';
-    if(t == "/meta/timesync")
+    if(t == "/meta/timesync/localtime")
     {
         unixtime = String(buf).toInt();
         setTime(unixtime);
@@ -161,9 +161,9 @@ void setup()
     if(client.connect(deviceName, willTopic, 0, 1, "offline"))
     {
         Display.write("3333");
-        client.publish(willTopic, "online");
+        client.publish_P(willTopic, "online", 6, 1);
         // subscribe to topics
-        client.subscribe("/meta/timesync");
+        client.subscribe("/meta/timesync/localtime");
     }
     else
     {
