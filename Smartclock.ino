@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "Time.h"
 #include "TimeAlarms.h"
 #include "Serial7SegmentDisplay.h"
@@ -28,10 +29,12 @@ unsigned long lightlevel = 0, light_acc = 0, light_cnt = 0;
 
 // configuration stuff pushed from server
 unsigned int light_threshold = 300;
-long tz_offset = 60*60*12; 
+char zone_root[] = "/zones/home/back_bedroom";
+unsigned int pub_interval = 300;
 
 // static configuration stuff
 byte server[] = { 10, 0, 0, 194 }; // not actually needed for serial PTP link
+char deviceName[] = "smartclock";
 
 // function defs
 void pubSubCallback(char* topic, byte* payload, unsigned int length);
@@ -127,14 +130,22 @@ void sensorsUpdate()
     }
 }
 
-void printSensors()
+void publishSensors()
 {
-//    Serial.println(lightlevel);
+    char topic[64];
+    
+    sprintf(topic, "%s/sensors/temperature", zone_root);
+    client.publish(topic, (uint8_t*)&temperature, sizeof(unsigned char));
+    
+    sprintf(topic, "%s/sensors/lightlevel", zone_root);
+    client.publish(topic, (uint8_t*)&lightlevel, sizeof(unsigned long));
+    
+    sprintf(topic, "/devices/%s/metadata/battery", deviceName);
+    client.publish(topic, (uint8_t*)&battery, sizeof(unsigned long));
 }
 
 void setup()
 {
-    char deviceName[] = "smartclock";
     char willTopic[64];
     sprintf(willTopic, "/devices/%s/status", deviceName); 
 
@@ -147,11 +158,10 @@ void setup()
     {
         delay(100);
     }
-    Display.write("1111");
     bluetooth.connect();
     //while(!bluetooth.isConnected());
     delay(100);
-    Display.write("2222");
+    Display.write("CON1");
 
     // Analog setup
     analogReference(DEFAULT);
@@ -160,21 +170,24 @@ void setup()
     //serClient.write((uint8_t*)deviceName, strlen(deviceName));
     if(client.connect(deviceName, willTopic, 0, 1, "offline"))
     {
-        Display.write("3333");
-        client.publish_P(willTopic, "online", 6, 1);
+        Display.write("CON2");
         // subscribe to topics
         client.subscribe("/meta/timesync/localtime");
+    
+        // publish online status
+        // do this here to avoid race condition with the timedaemon
+        client.publish(willTopic, (uint8_t*)"online", 6, 1);
     }
     else
     {
-        Display.write("4444");
+        Display.write("FAIL");
     }
     delay(5000);
 
     // Alarm setup
     displayUpdate();
     Alarm.timerRepeat(20, displayCallback);
-    Alarm.timerRepeat(5, printSensors);
+    Alarm.timerRepeat(pub_interval, publishSensors);
 }
 
 void loop()
