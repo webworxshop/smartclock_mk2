@@ -7,3 +7,6 @@
 [submodule "libraries/jeelib"]
 	path = libraries/jeelib
 	url = https://github.com/jcw/jeelib.git
+[submodule "libraries/time"]
+	path = libraries/time
+	url = ssh://laforge/home/robert/git/arduino_time_libraries.git
