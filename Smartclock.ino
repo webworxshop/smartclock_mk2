@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include "Time.h"
 #include "TimeAlarms.h"
 #include "Serial7SegmentDisplay.h"
@@ -20,6 +19,8 @@ ISR(WDT_vect) { Sleepy::watchdogEvent(); }
 #define TEMP_AVERAGE_READINGS       200
 #define LIGHT_AVERAGE_READINGS      10
 #define BATTERY_AVERAGE_READINGS    200
+
+#define PIR         3
 
 // local variables for sensors and program state
 bool displayTime = true;
@@ -58,6 +59,14 @@ void pubSubCallback(char* topic, byte* payload, unsigned int length)
         unixtime = String(buf).toInt();
         setTime(unixtime);
     }
+}
+
+void int0_handler()
+{
+    char topic[64];
+    sprintf(topic, "%s/sensors/motion", zone_root);
+    uint8_t s = digitalRead(PIR);
+    client.publish(topic, (uint8_t*)&s, sizeof(unsigned char));
 }
 
 String formatDigits(int d)
@@ -148,7 +157,10 @@ void setup()
 {
     char willTopic[64];
     sprintf(willTopic, "/devices/%s/status", deviceName); 
-
+    
+    pinMode(PIR, INPUT);
+    attachInterrupt(1, int0_handler, CHANGE);
+    
     Display.begin(10);
     Display.brightness(128);
     setTime(19, 19, 0, 16, 4, 2013);
