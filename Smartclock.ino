@@ -161,15 +161,19 @@ void sensorsUpdate()
 void publishSensors()
 {
     char topic[64];
+    char payload[8];
     
     sprintf(topic, "%s/sensors/temperature", zone_root);
-    client.publish(topic, (uint8_t*)&temperature, sizeof(unsigned char));
+    sprintf(payload, "%d", temperature);
+    client.publish(topic, (uint8_t*)payload, strlen(payload));
     
     sprintf(topic, "%s/sensors/lightlevel", zone_root);
-    client.publish(topic, (uint8_t*)&lightlevel, sizeof(unsigned long));
+    sprintf(payload, "%d", lightlevel);
+    client.publish(topic, (uint8_t*)payload, strlen(payload));
     
     sprintf(topic, "/devices/%s/metadata/battery", deviceName);
-    client.publish(topic, (uint8_t*)&battery, sizeof(unsigned long));
+    sprintf(payload, "%d", battery);
+    client.publish(topic, (uint8_t*)payload, strlen(payload));
 }
 
 void setup()
