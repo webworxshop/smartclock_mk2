@@ -165,7 +165,7 @@ void publishSensors()
     char payload[8];
     
     sprintf(topic, "%s/sensors/temperature", zone_root);
-    sprintf(payload, "%d", temperature);
+    sprintf(payload, "%01f", (float)temperature/10.0f);
     client.publish(topic, (uint8_t*)payload, strlen(payload));
     
     sprintf(topic, "%s/sensors/lightlevel", zone_root);
