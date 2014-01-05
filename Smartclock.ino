@@ -24,8 +24,9 @@
 #include "PubSubClient.h"
 #include "Bluetooth.h"
 #include "Ports.h"
+#include <avr/wdt.h>
 
-ISR(WDT_vect) { Sleepy::watchdogEvent(); }
+//ISR(WDT_vect) { Sleepy::watchdogEvent(); }
  
 // Temperature Sensor on analog input 0
 #define TEMP_SENSOR	                0
@@ -223,6 +224,8 @@ void setup()
     displayUpdate();
     Alarm.timerRepeat(20, displayCallback);
     Alarm.timerRepeat(pub_interval, publishSensors);
+
+    wdt_enable(WDTO_8S); 
 }
 
 void loop()
@@ -237,4 +240,7 @@ void loop()
     //Sleepy::loseSomeTime(100);
     Alarm.delay(100);
     client.loop();
+    if(client.connected())
+       wdt_reset(); 
 }
+
