@@ -84,9 +84,13 @@ void pubSubCallback(char* topic, byte* payload, unsigned int length)
 void int0_handler()
 {
     char topic[64];
+    char payload[2];
+
     sprintf(topic, "%s/sensors/motion", zone_root);
     uint8_t s = digitalRead(PIR);
-    client.publish(topic, (uint8_t*)&s, sizeof(unsigned char));
+    sprintf(payload, "%d", s);
+
+    client.publish(topic, (uint8_t*)payload, strlen(payload));
 }
 
 String formatDigits(int d)
@@ -165,7 +169,7 @@ void publishSensors()
     char payload[8];
     
     sprintf(topic, "%s/sensors/temperature", zone_root);
-    sprintf(payload, "%01f", (float)temperature/10.0f);
+    sprintf(payload, "%d.%d", temperature / 10, temperature % 10);
     client.publish(topic, (uint8_t*)payload, strlen(payload));
     
     sprintf(topic, "%s/sensors/lightlevel", zone_root);
