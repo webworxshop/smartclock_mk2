@@ -3,10 +3,10 @@
 	url = https://github.com/knolleary/pubsubclient.git
 [submodule "libraries/Bluetooth"]
 	path = libraries/Bluetooth
-	url = ssh://laforge/home/robert/git/arduino_bluetooth.git
+	url = https://github.com/webworxshop/arduino_bluetooth.git 
 [submodule "libraries/jeelib"]
 	path = libraries/jeelib
 	url = https://github.com/jcw/jeelib.git
 [submodule "libraries/time"]
 	path = libraries/time
-	url = ssh://laforge/home/robert/git/arduino_time_libraries.git
+	url = https://github.com/webworxshop/arduino_time_libraries.git
