@@ -10,3 +10,6 @@
 [submodule "libraries/time"]
 	path = libraries/time
 	url = https://github.com/webworxshop/arduino_time_libraries.git
+[submodule "arduino-mk"]
+	path = arduino-mk
+	url = https://github.com/sudar/Arduino-Makefile.git

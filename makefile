@@ -4,4 +4,4 @@ ARDUINO_PORT = /dev/ttyUSB*
 ARDUINO_LIBS = time/Time time/TimeAlarms SPI Bluetooth pubsubclient/PubSubClient jeelib
 ARDUINO_SKETCHBOOK = .
 
-include ./Arduino.mk
+include $(ARDMK_DIR)/Arduino.mk
